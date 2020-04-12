@@ -154,12 +154,12 @@ def findTheDifference(video1, video2, timestamp):
 
     pathIn = os.path.abspath('.')+'/mark_1/'
     pathOut = os.path.abspath('.')+'/marked_videos/videoOut1'+timestamp+'.mp4'
-    fps = 2.0
+    fps = 1 / FRAME_RATE
     convert_frames_to_video(pathIn, pathOut, fps)
 
     pathIn = os.path.abspath('.')+'/mark_2/'
     pathOut = os.path.abspath('.')+'/marked_videos/videoOut2'+timestamp+'.mp4'
-    fps = 2.0
+    fps = 1 / FRAME_RATE
     convert_frames_to_video(pathIn, pathOut, fps)
 
     return 'success'   
