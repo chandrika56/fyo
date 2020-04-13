@@ -15,6 +15,7 @@ def findTheDifference(video1, video2, timestamp):
         data = yaml.load(f, Loader=yaml.FullLoader)
         UPLOAD_FOLDER = data['uploadFolder']
         FRAME_RATE = data['frameRate']
+        NUMBER_OF_GROUPS = data['numberOfGroups']
 
     def get_right_count(count):
         if count<10:
@@ -83,10 +84,16 @@ def findTheDifference(video1, video2, timestamp):
     print(len(arr2))
 
     diffarr=[] 
+
+    # finding the number of frames per group
+    n_per_group = int(count / NUMBER_OF_GROUPS)
+    score_list = []
+    dissimilar_image_list = []
+
     for i in range(count):
 
         i = get_right_count(i)
-                    
+        
         frameBasePath =  os.path.abspath('.')+"/raw_1/"
         imageA = cv2.imread(frameBasePath+str(i)+"_"+timestamp+".jpg")
         frameBasePath2 =  os.path.abspath('.')+"/raw_2/"
@@ -99,6 +106,8 @@ def findTheDifference(video1, video2, timestamp):
         grayB = cv2.bilateralFilter(grayB,9,75,75)
 
         (score, diff) = compare_ssim(grayA, grayB, full=True)
+        score_list.append(score)
+
         diff = (diff * 255).astype("uint8")
         thresh = cv2.threshold(diff, 0, 255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
         cv2.imwrite(os.path.abspath('.')+"/diff/"+str(i)+"_"+timestamp+".jpg", thresh) 
@@ -119,8 +128,44 @@ def findTheDifference(video1, video2, timestamp):
             boxB.append(imageB)
             
         cv2.imwrite(os.path.abspath('.')+"/mark_1/"+str(i)+"_"+timestamp+".jpg", imageA) 
-        cv2.imwrite(os.path.abspath('.')+"/mark_2/"+str(i)+"_"+timestamp+".jpg", imageB)   
-    
+        cv2.imwrite(os.path.abspath('.')+"/mark_2/"+str(i)+"_"+timestamp+".jpg", imageB)  
+
+
+    avg_list= list()
+    sum = 0
+    n = 0
+    i = 0
+
+    for index, score in enumerate(score_list):
+        i+=1
+        sum+=round(score, 2)
+        if i == n_per_group or index == len(score_list)-1:
+            avg = sum / i
+            avg_list.append(avg)
+            i=0
+            sum=0
+            avg=0
+
+    print(avg_list)
+
+    print("We have ", int(len(avg_list)), "segments")
+    segment = 0
+    for index, score in enumerate(score_list):
+        if round(score, 2) < avg_list[segment]:
+            c = get_right_count(index)
+            image_name = c + "_" + timestamp + ".jpg"
+            dissimilar_image_list.append(image_name)
+        i+=1
+        if i == n_per_group or index == len(score_list)-1:
+            print("In Segment ", segment+1)
+            if segment < len(avg_list)-1:
+                segment += 1
+            i=0
+
+    print(len(dissimilar_image_list))
+    print(dissimilar_image_list)
+    # print(score_list)
+
     def convert_frames_to_video(pathIn,pathOut,fps):
         frame_array = []
         
@@ -151,7 +196,6 @@ def findTheDifference(video1, video2, timestamp):
             out.write(frame_array[i])
         out.release()
 
-
     pathIn = os.path.abspath('.')+'/mark_1/'
     pathOut = os.path.abspath('.')+'/marked_videos/videoOut1'+timestamp+'.mp4'
     fps = 1 / FRAME_RATE
@@ -162,4 +206,17 @@ def findTheDifference(video1, video2, timestamp):
     fps = 1 / FRAME_RATE
     convert_frames_to_video(pathIn, pathOut, fps)
 
-    return 'success'   
+    result = {
+        'status': 'success',
+        'unique_timestamp': timestamp,
+        'dissimilar_image_list': dissimilar_image_list,
+        'n_dissimilar_images': len(dissimilar_image_list),
+        'total_frames': count,
+        'markedVideosPath': os.path.abspath('.')+'\\marked_videos\\',
+        'rawVideoOneFramesPath': os.path.abspath('.')+'\\raw_1\\',
+        'rawVideoTwoFramesPath': os.path.abspath('.')+'\\raw_2\\',
+        'boxedFramesVideoOnePath': os.path.abspath('.')+'\\mark_1\\',
+        'boxedFramesVideoTwoPath': os.path.abspath('.')+'\\mark_2\\',
+    }
+
+    return result

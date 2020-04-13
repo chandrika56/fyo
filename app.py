@@ -6,6 +6,7 @@ import os
 from skimage.measure import compare_ssim
 import yaml
 from differenceFinder import findTheDifference
+from flask import jsonify
 
 
 UPLOAD_FOLDER = ''
@@ -36,8 +37,8 @@ def upload_file():
         f2.save(video_path+secure_filename(name2))
 
         result = findTheDifference(name1, name2, timestr)                   
-
-    return str(timestr)
+        
+    return jsonify(result), 201
 
                 
 if __name__ == '__main__':
