@@ -1,0 +1,9 @@
+/flaskenv
+/diff/*
+/mark_1/*
+/mark_2/*
+/raw_1/*
+/raw_2/*
+/videos/*
+/marked_videos/*
+/__pycache__
