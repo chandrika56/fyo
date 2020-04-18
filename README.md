@@ -25,6 +25,7 @@ Flask api for differencing and returning captions.
 - skimage
 - imutils
 - pyyaml
+- flask-cors
 
 **Note:** You will be able to change the Framerate by changing the Framerate in the config.yaml file. This `FRAME_RATE` must be give as how often the frame has to be captured. So it is actually **1 / framesPerSecond**
 
